@@ -1,7 +1,7 @@
+use crate::blobstore::{BlobStore, ID};
+use serde::{de::DeserializeOwned, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
-use crate::blobstore::{BlobStore, ID};
-use serde::{Serialize, de::DeserializeOwned};
 
 pub struct MapStore {
     data: HashMap<ID, String>,
@@ -18,7 +18,11 @@ impl MapStore {
 impl<'a> BlobStore<'a> for MapStore {
     type RawObject = String;
 
-    fn get<T: DeserializeOwned>(&'a self, id: &ID, process: fn(&'a Self::RawObject) -> Result<T, Box<dyn Error>>) -> Result<T, Box<dyn Error>> {
+    fn get<T: DeserializeOwned>(
+        &'a self,
+        id: &ID,
+        process: fn(&'a Self::RawObject) -> Result<T, Box<dyn Error>>,
+    ) -> Result<T, Box<dyn Error>> {
         if let Some(d) = self.data.get(id) {
             Ok(process(d.into()).unwrap())
         } else {
@@ -26,11 +30,15 @@ impl<'a> BlobStore<'a> for MapStore {
         }
     }
 
-    fn put<T: Serialize>(&mut self, id: &ID, t: &T, process: fn(&T) -> Result<Self::RawObject, Box<dyn Error>>) -> Result<(), Box<dyn Error>> {
+    fn put<T: Serialize>(
+        &mut self,
+        id: &ID,
+        t: &T,
+        process: fn(&T) -> Result<Self::RawObject, Box<dyn Error>>,
+    ) -> Result<(), Box<dyn Error>> {
         let data = process(t)?;
         self.put_object(id, &data)
     }
-
 
     fn get_object(&'a self, id: &ID) -> Result<&'a Self::RawObject, Box<dyn Error>> {
         if let Some(d) = self.data.get(id) {
@@ -45,5 +53,3 @@ impl<'a> BlobStore<'a> for MapStore {
         Ok(())
     }
 }
-
-
