@@ -1,13 +1,15 @@
-use crate::blobstore::{BlobStore, ID};
+use crate::blobstore::BlobStore;
+use crate::node::HasID;
 use serde::{de::DeserializeOwned, Serialize};
 use std::collections::HashMap;
 use std::error::Error;
+use std::hash::Hash;
 
-pub struct MapStore {
+pub struct MapStore<ID: Eq + PartialEq + Hash + Clone> {
     data: HashMap<ID, String>,
 }
 
-impl MapStore {
+impl<ID: Eq + PartialEq + Hash + Clone> MapStore<ID> {
     pub fn new() -> Self {
         Self {
             data: HashMap::new(),
@@ -15,12 +17,12 @@ impl MapStore {
     }
 }
 
-impl<'a> BlobStore<'a> for MapStore {
+impl<'a, ID: Eq + PartialEq + Hash + Clone> BlobStore<'a> for MapStore<ID> {
     type RawObject = String;
 
     fn get<T: DeserializeOwned>(
         &'a self,
-        id: &ID,
+        id: &Self::ID,
         process: fn(&'a Self::RawObject) -> Result<T, Box<dyn Error>>,
     ) -> Result<T, Box<dyn Error>> {
         if let Some(d) = self.data.get(id) {
@@ -52,4 +54,8 @@ impl<'a> BlobStore<'a> for MapStore {
         self.data.insert(id.clone(), obj.clone());
         Ok(())
     }
+}
+
+impl<'a, ID: Eq + PartialEq + Hash + Clone> HasID for MapStore<ID> {
+    type ID = ID;
 }

@@ -1,4 +1,7 @@
-use crate::blobstore::ID;
 use std::collections::HashMap;
 
-pub type Node = HashMap<String, Vec<ID>>;
+pub trait HasID {
+    type ID;
+}
+
+pub type Node<T> = HashMap<String, Vec<<T as HasID>::ID>>;

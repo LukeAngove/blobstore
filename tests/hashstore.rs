@@ -22,8 +22,10 @@ fn sj_writter<T: Serialize>(a: &T) -> Result<String, Box<dyn Error>> {
 
 #[test]
 fn test_hash_store() {
-    let store = MapStore::new();
-    let mut main_store = HashBlobStore::<'_, MapStore, Sha256>::new(store);
+    type Store<'a> = HashBlobStore<'a, MapStore<String>, Sha256>;
+    type SNode<'a> = Node<Store<'a>>;
+
+    let mut main_store = Store::<'_>::new(MapStore::new());
 
     let str_in = "Hi".to_string();
 
@@ -35,12 +37,12 @@ fn test_hash_store() {
         .expect("Failed to get result");
     assert_eq!(str_in, val);
 
-    let node = Node::from([("files".to_string(), [id1.clone()].to_vec())]);
+    let node = SNode::<'_>::from([("files".to_string(), [id1.clone()].to_vec())]);
     let id2 = main_store
         .put(&node, sj_writter)
         .expect("Failed to put object");
     let val = main_store
-        .get(&id2, sj_reader::<Node>)
+        .get(&id2, sj_reader::<SNode<'_>>)
         .expect("Failed to get result");
     assert_eq!(node, val);
 
