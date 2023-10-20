@@ -17,6 +17,12 @@ impl<ID: Eq + PartialEq + Hash + Clone> MapStore<ID> {
     }
 }
 
+impl<ID: Eq + PartialEq + Hash + Clone> Default for MapStore<ID> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<ID: Eq + PartialEq + Hash + Clone> BlobStore for MapStore<ID> {
     type RawObject = String;
 
@@ -56,6 +62,6 @@ impl<ID: Eq + PartialEq + Hash + Clone> BlobStore for MapStore<ID> {
     }
 }
 
-impl<'a, ID: Eq + PartialEq + Hash + Clone> HasID for MapStore<ID> {
+impl<ID: Eq + PartialEq + Hash + Clone> HasID for MapStore<ID> {
     type ID = ID;
 }

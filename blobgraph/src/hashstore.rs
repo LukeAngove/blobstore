@@ -1,4 +1,4 @@
-use crate::blobstore::BlobStore;
+use crate::blobstore::{BSResult, BlobStore};
 use crate::node::HasID;
 use digest::{Digest, Output};
 use serde::{de::DeserializeOwned, Serialize};
@@ -16,19 +16,16 @@ pub trait HashStore: HasID {
     fn get<T: DeserializeOwned>(
         &self,
         id: &<Self as HasID>::ID,
-        processor: fn(Self::RawObject) -> Result<T, Box<dyn Error>>,
+        processor: fn(Self::RawObject) -> BSResult<T>,
     ) -> Result<T, Box<dyn Error>>;
 
     fn put<T: Serialize>(
         &mut self,
         t: &T,
-        processor: fn(&T) -> Result<Self::RawObject, Box<dyn Error>>,
+        processor: fn(&T) -> BSResult<Self::RawObject>,
     ) -> Result<<Self as HasID>::ID, Box<dyn Error>>;
 
-    fn get_object(
-        &self,
-        id: &<Self as HasID>::ID,
-    ) -> Result<Self::RawObject, Box<dyn Error>>;
+    fn get_object(&self, id: &<Self as HasID>::ID) -> Result<Self::RawObject, Box<dyn Error>>;
     fn put_object(&mut self, obj: Self::RawObject) -> Result<<Self as HasID>::ID, Box<dyn Error>>;
     fn digest_into_id(raw_id: Self::HashOutput) -> <Self as HasID>::ID;
 }
@@ -51,8 +48,7 @@ impl<BS: BlobStore<ID = String>, Hasher: Digest> HasID for HashBlobStore<BS, Has
     type ID = BS::ID;
 }
 
-impl<BS: BlobStore<ID = String>, Hasher: Digest> HashStore
-    for HashBlobStore<BS, Hasher>
+impl<BS: BlobStore<ID = String>, Hasher: Digest> HashStore for HashBlobStore<BS, Hasher>
 where
     BS::RawObject: AsRef<[u8]>,
 {

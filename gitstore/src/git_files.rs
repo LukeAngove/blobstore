@@ -10,23 +10,25 @@ pub struct GitStore {
 }
 
 impl GitStore {
-    pub fn default() -> Self {
-        Self {
-            path: ".git/objects".into(),
-        }
-    }
-
     pub fn new(path: String) -> Self {
         Self { path }
     }
 
     fn id_to_path(&self, id: &str) -> Result<String, Box<dyn Error>> {
-        return Ok(format!(
+        Ok(format!(
             "{}/{}/{}",
             self.path,
             id.get(0..2).ok_or("failed")?,
             id.get(2..).ok_or("failed")?
-        ));
+        ))
+    }
+}
+
+impl Default for GitStore {
+    fn default() -> Self {
+        Self {
+            path: ".git/objects".into(),
+        }
     }
 }
 
@@ -43,7 +45,7 @@ impl BlobStore for GitStore {
         process: fn(Self::RawObject) -> Result<T, Box<dyn Error>>,
     ) -> Result<T, Box<dyn Error>> {
         if let Ok(d) = self.get_object(id) {
-            process(d.into())
+            process(d)
         } else {
             Err(Box::<dyn Error>::from("No such key"))
         }
