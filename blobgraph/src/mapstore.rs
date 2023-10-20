@@ -17,13 +17,13 @@ impl<ID: Eq + PartialEq + Hash + Clone> MapStore<ID> {
     }
 }
 
-impl<'a, ID: Eq + PartialEq + Hash + Clone> BlobStore<'a> for MapStore<ID> {
+impl<ID: Eq + PartialEq + Hash + Clone> BlobStore for MapStore<ID> {
     type RawObject = String;
 
     fn get<T: DeserializeOwned>(
-        &'a self,
+        &self,
         id: &Self::ID,
-        process: fn(&'a Self::RawObject) -> Result<T, Box<dyn Error>>,
+        process: fn(Self::RawObject) -> Result<T, Box<dyn Error>>,
     ) -> Result<T, Box<dyn Error>> {
         if let Some(d) = self.data.get(id) {
             Ok(process(d.into()).unwrap())
@@ -34,23 +34,23 @@ impl<'a, ID: Eq + PartialEq + Hash + Clone> BlobStore<'a> for MapStore<ID> {
 
     fn put<T: Serialize>(
         &mut self,
-        id: &ID,
+        id: &Self::ID,
         t: &T,
         process: fn(&T) -> Result<Self::RawObject, Box<dyn Error>>,
     ) -> Result<(), Box<dyn Error>> {
         let data = process(t)?;
-        self.put_object(id, &data)
+        self.put_object(id, data)
     }
 
-    fn get_object(&'a self, id: &ID) -> Result<&'a Self::RawObject, Box<dyn Error>> {
+    fn get_object(&self, id: &Self::ID) -> Result<Self::RawObject, Box<dyn Error>> {
         if let Some(d) = self.data.get(id) {
-            Ok(d)
+            Ok(d.into())
         } else {
             Err(Box::<dyn Error>::from("No such key"))
         }
     }
 
-    fn put_object(&mut self, id: &ID, obj: &Self::RawObject) -> Result<(), Box<dyn Error>> {
+    fn put_object(&mut self, id: &Self::ID, obj: Self::RawObject) -> Result<(), Box<dyn Error>> {
         self.data.insert(id.clone(), obj.clone());
         Ok(())
     }
