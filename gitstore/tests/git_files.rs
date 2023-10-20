@@ -173,3 +173,41 @@ members = [
         panic!("Incorrect type for value.");
     }
 }
+
+#[test]
+fn test_read_tag() {
+    let main_store = make_store();
+
+    let id = "06a99480d966be0aca39829bf75625cbd0dc5113".to_string();
+
+    let val = main_store
+        .get(&id, sj_reader)
+        .expect("Failed to get result");
+
+    let tagger_name = "Luke Angove";
+    let tagger_email = "luke.angove@gmail.com";
+    let tagger_time = Time {
+        seconds: 1697808994,
+        sign: Sign::Plus,
+        offset: hourmin_to_seconds(1100),
+    };
+    let target_id = "c258b1e263870e0eb6452fd1e6f73b4cb69a99a6";
+    let target_kind = Kind::Commit;
+    let name = "test_reference";
+
+    let message = "This is for unit tests, do not move\n";
+
+    assert_eq!(Kind::Tag, val.kind());
+    if let Object::Tag(tag) = val {
+        assert_eq!(tagger_name, tag.tagger.clone().unwrap().name.to_string());
+        assert_eq!(tagger_email, tag.tagger.clone().unwrap().email.to_string());
+        assert_eq!(tagger_time, tag.tagger.unwrap().time);
+        assert_eq!(target_id, tag.target.to_string());
+        assert_eq!(target_kind, tag.target_kind);
+        assert_eq!(name, tag.name);
+
+        assert_eq!(message, tag.message);
+    } else {
+        panic!("Incorrect type for value.");
+    }
+}
